@@ -28,14 +28,14 @@ from timeit import default_timer as timer
 
 import torch.nn.init as init
 
-DATA_DIR = '/datasets/lsun'
-VAL_DIR = '/datasets/lsun'
+DATA_DIR = '/content/drive/MyDrive/annotation_train_data_ver3'
+VAL_DIR = '/content/drive/MyDrive/annotation_train_data_ver3'
 
-IMAGE_DATA_SET = 'lsun' #change this to something else, e.g. 'imagenets' or 'raw' if your data is just a folder of raw images. 
+IMAGE_DATA_SET = 'lsun_self' #change this to something else, e.g. 'imagenets' or 'raw' if your data is just a folder of raw images. 
 #If you use lmdb, you'll need to write the loader by yourself, see load_data
 TRAINING_CLASS = ['dining_room_train', 'bridge_train', 'restaurant_train', 'tower_train'] 
 VAL_CLASS = ['dining_room_val', 'bridge_val', 'restaurant_val', 'tower_val'] 
-NUM_CLASSES = 4
+NUM_CLASSES = 6
 
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_64x64.py!')
