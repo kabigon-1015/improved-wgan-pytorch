@@ -78,7 +78,7 @@ def weights_init(m):
 
 def load_data(path_to_folder, classes):
     data_transform = transforms.Compose([
-                 transforms.Scale(64),
+                 transforms.Resize(64),
                  transforms.CenterCrop(64),
                  transforms.ToTensor(),
                  transforms.Normalize(mean=[0.5, 0.5, 0.5],std=[0.5, 0.5, 0.5])
