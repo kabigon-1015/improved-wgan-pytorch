@@ -159,7 +159,7 @@ class GoodGenerator(nn.Module):
         output = self.relu(output)
         output = self.conv1(output)
         output = self.tanh(output)
-        output = output.view(-1, 3 * self.dim * self.dim)
+        output = output.reshape(-1, 3 * self.dim * self.dim)
         return output
 
 class GoodDiscriminator(nn.Module):
@@ -184,7 +184,7 @@ class GoodDiscriminator(nn.Module):
         output = self.rb2(output)
         output = self.rb3(output)
         output = self.rb4(output)
-        output = output.view(-1, self.ssize*self.ssize*8*self.dim)
+        output = output.reshape(-1, self.ssize*self.ssize*8*self.dim)
         output = self.ln1(output)
         output = output.view(-1)
         return output
