@@ -30,7 +30,7 @@ from timeit import default_timer as timer
 
 import torch.nn.init as init
 
-DATA_DIR = '/content/drive/MyDrive/annotation_train_data_ver3'
+DATA_DIR = '/content/drive/MyDrive/living_annotation_train_data'
 VAL_DIR = '/content/drive/MyDrive/annotation_train_data_ver3'
 
 IMAGE_DATA_SET = 'lsun_self' #change this to something else, e.g. 'imagenets' or 'raw' if your data is just a folder of raw images. 
@@ -115,8 +115,7 @@ def load_data(path_to_folder, classes):
     if IMAGE_DATA_SET == 'lsun':
         dataset =  datasets.LSUN(path_to_folder, classes=classes, transform=data_transform)
     else:
-        lmdb_path = '/content/drive/MyDrive/living_annotation_train_data_lmdb'
-        dataset = LMDBDataset(lmdb_path, transform=data_transform)
+        dataset = datasets.ImageFolder(root=path_to_folder,transform=data_transform)
     dataset_loader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE, shuffle=True, num_workers=5, drop_last=True, pin_memory=True)
     return dataset_loader
 
