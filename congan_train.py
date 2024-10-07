@@ -55,6 +55,22 @@ OUTPUT_DIM = 64*64*3 # Number of pixels in each iamge
 ACGAN_SCALE = 1. # How to scale the critic's ACGAN loss relative to WGAN loss
 ACGAN_SCALE_G = 1. # How to scale generator's ACGAN loss relative to WGAN loss
 
+class LMDBDataset(Dataset):
+    def __init__(self, lmdb_path):
+        self.env = lmdb.open(lmdb_path, readonly=True, lock=False, readahead=False, meminit=False)
+        with self.env.begin(write=False) as txn:
+            self.length = txn.stat()['entries']
+
+    def __getitem__(self, index):
+        with self.env.begin(write=False) as txn:
+            key = f'{index:08d}'.encode()
+            value = txn.get(key)
+            # ここでvalueをデコードし、必要な形式に変換します
+        return data, label
+
+    def __len__(self):
+        return self.length
+
 def showMemoryUsage(device=1):
     gpu_stats = gpustat.GPUStatCollection.new_query()
     item = gpu_stats.jsonify()["gpus"][device]
@@ -86,7 +102,7 @@ def load_data(path_to_folder, classes):
     if IMAGE_DATA_SET == 'lsun':
         dataset =  datasets.LSUN(path_to_folder, classes=classes, transform=data_transform)
     else:
-        dataset = datasets.ImageFolder(root=path_to_folder,transform=data_transform)
+        dataset = LMDBDataset('/content/drive/MyDrive/living_annotation_train_data_lmdb')
     dataset_loader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE, shuffle=True, num_workers=5, drop_last=True, pin_memory=True)
     return dataset_loader
 
