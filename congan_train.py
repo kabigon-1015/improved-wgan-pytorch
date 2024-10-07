@@ -42,7 +42,7 @@ if len(DATA_DIR) == 0:
 
 RESTORE_MODE = False  # if True, it will load saved model from OUT_PATH and continue to train
 START_ITER = 0 # starting iteration 
-OUTPUT_PATH = 'output' # output path where result (.e.g drawing images, cost, chart) will be stored
+OUTPUT_PATH = '/content/drive/MyDrive/output_wgan/' # output path where result (.e.g drawing images, cost, chart) will be stored
 # MODE = 'wgan-gp'
 DIM = 64 # Model dimensionality
 CRITIC_ITERS = 5 # How many iterations to train the critic for
