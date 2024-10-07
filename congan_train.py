@@ -23,6 +23,7 @@ from torch import nn
 from torch import autograd
 from torch import optim
 from torchvision import transforms, datasets
+from torch.utils.data import Dataset
 from torch.autograd import grad
 from timeit import default_timer as timer
 
