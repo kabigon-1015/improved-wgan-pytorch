@@ -224,7 +224,7 @@ def train():
             batch = next(dataiter, None)
             if batch is None:
                 dataiter = iter(dataloader)
-                batch = dataiter.next()
+                batch = next(dataiter)
             real_data = batch[0] #batch[1] contains labels
             real_data.requires_grad_(True)
             real_label = batch[1]
