@@ -115,7 +115,8 @@ def load_data(path_to_folder, classes):
     if IMAGE_DATA_SET == 'lsun':
         dataset =  datasets.LSUN(path_to_folder, classes=classes, transform=data_transform)
     else:
-        dataset = LMDBDataset(OUTPUT_PATH, transform=data_transform)
+        lmdb_path = '/content/drive/MyDrive/living_annotation_train_data_lmdb'
+        dataset = LMDBDataset(lmdb_path, transform=data_transform)
     dataset_loader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE, shuffle=True, num_workers=5, drop_last=True, pin_memory=True)
     return dataset_loader
 
