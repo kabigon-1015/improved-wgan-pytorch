@@ -56,17 +56,28 @@ ACGAN_SCALE = 1. # How to scale the critic's ACGAN loss relative to WGAN loss
 ACGAN_SCALE_G = 1. # How to scale generator's ACGAN loss relative to WGAN loss
 
 class LMDBDataset(Dataset):
-    def __init__(self, lmdb_path):
+    def __init__(self, lmdb_path, transform=None):
         self.env = lmdb.open(lmdb_path, readonly=True, lock=False, readahead=False, meminit=False)
         with self.env.begin(write=False) as txn:
-            self.length = txn.stat()['entries']
+            self.length = txn.stat()['entries'] - 1  # Subtract 1 for the 'class_counts' key
+        self.transform = transform
 
     def __getitem__(self, index):
         with self.env.begin(write=False) as txn:
             key = f'{index:08d}'.encode()
             value = txn.get(key)
-            # ここでvalueをデコードし、必要な形式に変換します
-        return data, label
+            
+            # Assuming the key format is 'class_id_image_id'
+            class_id = int(key[:2].decode())
+            
+            # Decode image
+            img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            
+            if self.transform:
+                img = self.transform(Image.fromarray(img))
+            
+            return img, class_id
 
     def __len__(self):
         return self.length
@@ -102,7 +113,7 @@ def load_data(path_to_folder, classes):
     if IMAGE_DATA_SET == 'lsun':
         dataset =  datasets.LSUN(path_to_folder, classes=classes, transform=data_transform)
     else:
-        dataset = LMDBDataset('/content/drive/MyDrive/living_annotation_train_data_lmdb')
+        dataset = LMDBDataset(OUTPUT_PATH, transform=data_transform)
     dataset_loader = torch.utils.data.DataLoader(dataset,batch_size=BATCH_SIZE, shuffle=True, num_workers=5, drop_last=True, pin_memory=True)
     return dataset_loader
 
