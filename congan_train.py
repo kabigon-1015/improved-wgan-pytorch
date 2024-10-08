@@ -59,16 +59,6 @@ ACGAN_SCALE = 1. # How to scale the critic's ACGAN loss relative to WGAN loss
 ACGAN_SCALE_G = 1. # How to scale generator's ACGAN loss relative to WGAN loss
 import lmdb
 
-env = lmdb.open('/content/drive/MyDrive/living_annotation_train_data_lmdb', readonly=True)
-with env.begin() as txn:
-    cursor = txn.cursor()
-    print(f"Number of entries: {txn.stat()['entries']}")
-    for key, value in cursor:
-        print(f"Key: {key}, Value length: {len(value)}")
-        if int(key) > 1068911:
-            break
-
-env.close()
 class LMDBDataset(Dataset):
     def __init__(self, lmdb_path, transform=None):
         self.env = lmdb.open(lmdb_path, readonly=True, lock=False, readahead=False, meminit=False)
@@ -78,26 +68,21 @@ class LMDBDataset(Dataset):
 
     def __getitem__(self, index):
         with self.env.begin(write=False) as txn:
-            key = f'{index:08d}'.encode()
-            value = txn.get(key)
-            if value is None:
-                raise IndexError(f"No data found for key: {key}")
-            
-            # データのデコードと前処理
-            img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
-            if img is None:
-                raise ValueError(f"Failed to decode image for key: {key}")
-            
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(img)
-            
-            if self.transform:
-                img = self.transform(img)
-            
-            # ラベルの取得（もしあれば）
-            label = index % NUM_CLASSES  # 仮のラベル付け方法
-            
-            return img, label
+            cursor = txn.cursor()
+            if cursor.first():
+                for _ in range(index):
+                    if not cursor.next():
+                        raise IndexError("Index out of range")
+                key, value = cursor.item()
+                img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(img)
+                if self.transform:
+                    img = self.transform(img)
+                label = int(key[:2])  # Assuming the first two digits of the key represent the label
+                return img, label
+            else:
+                raise IndexError("Empty database")
 
     def __len__(self):
         with self.env.begin(write=False) as txn:
