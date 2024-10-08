@@ -57,7 +57,18 @@ LAMBDA = 10 # Gradient penalty lambda hyperparameter
 OUTPUT_DIM = 64*64*3 # Number of pixels in each iamge
 ACGAN_SCALE = 1. # How to scale the critic's ACGAN loss relative to WGAN loss
 ACGAN_SCALE_G = 1. # How to scale generator's ACGAN loss relative to WGAN loss
+import lmdb
 
+env = lmdb.open('/content/drive/MyDrive/living_annotation_train_data_lmdb', readonly=True)
+with env.begin() as txn:
+    cursor = txn.cursor()
+    print(f"Number of entries: {txn.stat()['entries']}")
+    for key, value in cursor:
+        print(f"Key: {key}, Value length: {len(value)}")
+        if int(key) > 1068911:
+            break
+
+env.close()
 class LMDBDataset(Dataset):
     def __init__(self, lmdb_path, transform=None):
         self.env = lmdb.open(lmdb_path, readonly=True, lock=False, readahead=False, meminit=False)
@@ -89,7 +100,8 @@ class LMDBDataset(Dataset):
             return img, label
 
     def __len__(self):
-        return self.length
+        with self.env.begin(write=False) as txn:
+            return txn.stat()['entries']
 
 def showMemoryUsage(device=1):
     gpu_stats = gpustat.GPUStatCollection.new_query()
