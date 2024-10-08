@@ -63,31 +63,38 @@ import lmdb
 class LMDBDataset(Dataset):
     def __init__(self, lmdb_path, transform=None):
         self.env = lmdb.open(lmdb_path, readonly=True, lock=False, readahead=False, meminit=False)
+        self.transform = transform or transforms.Compose([
+            transforms.Resize(64),
+            transforms.CenterCrop(64),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        ])
         with self.env.begin(write=False) as txn:
-            self.length = txn.stat()['entries'] - 1  # Subtract 1 for the 'class_counts' key
-        self.transform = transform
+            self.length = txn.stat()['entries']
 
     def __getitem__(self, index):
         with self.env.begin(write=False) as txn:
-            cursor = txn.cursor()
-            if cursor.first():
-                for _ in range(index):
-                    if not cursor.next():
-                        raise IndexError("Index out of range")
-                key, value = cursor.item()
-                img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                img = Image.fromarray(img)
-                if self.transform:
-                    img = self.transform(img)
-                label = int(key[:2])  # Assuming the first two digits of the key represent the label
-                return img, label
-            else:
-                raise IndexError("Empty database")
+            key = f'{index:08d}'.encode()
+            value = txn.get(key)
+            if value is None:
+                raise IndexError(f"No data found for key: {key}")
+            
+            # Decode image
+            img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(img)
+            
+            # Apply transformations
+            img = self.transform(img)
+            
+            # For this example, we're using the index as a dummy label
+            # You should replace this with the actual label if available
+            label = index % NUM_CLASSES
+            
+            return img, label
 
     def __len__(self):
-        with self.env.begin(write=False) as txn:
-            return txn.stat()['entries']
+        return self.length
 
 def showMemoryUsage(device=1):
     gpu_stats = gpustat.GPUStatCollection.new_query()
