@@ -27,6 +27,7 @@ from torchvision import transforms, datasets
 from torch.utils.data import Dataset
 from torch.autograd import grad
 from timeit import default_timer as timer
+from PIL import Image
 import cv2
 
 import torch.nn.init as init
