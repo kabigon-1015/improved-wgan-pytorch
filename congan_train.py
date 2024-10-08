@@ -69,18 +69,24 @@ class LMDBDataset(Dataset):
         with self.env.begin(write=False) as txn:
             key = f'{index:08d}'.encode()
             value = txn.get(key)
+            if value is None:
+                raise IndexError(f"No data found for key: {key}")
             
-            # Assuming the key format is 'class_id_image_id'
-            class_id = int(key[:2].decode())
-            
-            # Decode image
+            # データのデコードと前処理
             img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
+            if img is None:
+                raise ValueError(f"Failed to decode image for key: {key}")
+            
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = Image.fromarray(img)
             
             if self.transform:
-                img = self.transform(Image.fromarray(img))
+                img = self.transform(img)
             
-            return img, class_id
+            # ラベルの取得（もしあれば）
+            label = index % NUM_CLASSES  # 仮のラベル付け方法
+            
+            return img, label
 
     def __len__(self):
         return self.length
