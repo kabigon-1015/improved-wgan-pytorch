@@ -74,24 +74,21 @@ class LMDBDataset(Dataset):
 
     def __getitem__(self, index):
         with self.env.begin(write=False) as txn:
-            key = f'{index:08d}'.encode()
-            value = txn.get(key)
-            if value is None:
-                raise IndexError(f"No data found for key: {key}")
-            
-            # Decode image
-            img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img = Image.fromarray(img)
-            
-            # Apply transformations
-            img = self.transform(img)
-            
-            # For this example, we're using the index as a dummy label
-            # You should replace this with the actual label if available
-            label = index % NUM_CLASSES
-            
-            return img, label
+            cursor = txn.cursor()
+            if cursor.first():
+                for _ in range(index):
+                    if not cursor.next():
+                        raise IndexError("Index out of range")
+                key, value = cursor.item()
+                img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(img)
+                if self.transform:
+                    img = self.transform(img)
+                label = int(key[:2])  # キーの最初の2桁をラベルとして使用
+                return img, label
+            else:
+                raise IndexError("Empty database")
 
     def __len__(self):
         return self.length
