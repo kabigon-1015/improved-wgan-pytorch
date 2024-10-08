@@ -33,7 +33,7 @@ import cv2
 import torch.nn.init as init
 
 DATA_DIR = '/content/drive/MyDrive/living_annotation_train_data_lmdb'
-VAL_DIR = '/content/drive/MyDrive/annotation_train_data_ver3'
+VAL_DIR = '/content/drive/MyDrive/living_annotation_train_data_lmdb'
 
 IMAGE_DATA_SET = 'lsun_self' #change this to something else, e.g. 'imagenets' or 'raw' if your data is just a folder of raw images. 
 #If you use lmdb, you'll need to write the loader by yourself, see load_data
