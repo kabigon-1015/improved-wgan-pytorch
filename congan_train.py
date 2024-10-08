@@ -33,7 +33,7 @@ import cv2
 import torch.nn.init as init
 
 DATA_DIR = '/content/drive/MyDrive/living_annotation_train_data_lmdb'
-VAL_DIR = '/content/drive/MyDrive/living_annotation_train_data_lmdb'
+VAL_DIR = '/content/drive/MyDrive/annotation_train_data_ver3'
 
 IMAGE_DATA_SET = 'lsun_self' #change this to something else, e.g. 'imagenets' or 'raw' if your data is just a folder of raw images. 
 #If you use lmdb, you'll need to write the loader by yourself, see load_data
@@ -335,19 +335,6 @@ def train():
         lib.plot.plot(OUTPUT_PATH + 'train_gen_cost', gen_cost.cpu().data.numpy())
         lib.plot.plot(OUTPUT_PATH + 'wasserstein_distance', w_dist.cpu().data.numpy())
         if iteration % 200==199:
-            val_loader = load_data(VAL_DIR, VAL_CLASS)
-            dev_disc_costs = []
-            for _, images in enumerate(val_loader):
-                imgs = torch.Tensor(images[0])
-               	imgs = imgs.to(device)
-                with torch.no_grad():
-            	    imgs_v = imgs
-
-                D, _ = aD(imgs_v)
-                _dev_disc_cost = -D.mean().cpu().data.numpy()
-                dev_disc_costs.append(_dev_disc_cost)
-            lib.plot.plot(OUTPUT_PATH + 'dev_disc_cost.png', np.mean(dev_disc_costs))
-            lib.plot.flush()	
             gen_images = generate_image(aG, fixed_noise)
             torchvision.utils.save_image(gen_images, OUTPUT_PATH + 'samples_{}.png'.format(iteration), nrow=8, padding=2)
             grid_images = torchvision.utils.make_grid(gen_images, nrow=8, padding=2)
