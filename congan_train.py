@@ -266,7 +266,7 @@ def train():
             real_data = batch[0] #batch[1] contains labels
             real_data.requires_grad_(True)
             real_label = batch[1]
-            print("r_label" + str(real_label))
+            # print("r_label" + str(real_label))
             end = timer(); print(f'---load real imgs elapsed time: {end-start}')
 
             start = timer()
