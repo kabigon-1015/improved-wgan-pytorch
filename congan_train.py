@@ -45,7 +45,7 @@ if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_64x64.py!')
 
 RESTORE_MODE = True  # if True, it will load saved model from OUT_PATH and continue to train
-START_ITER = 0 # starting iteration 
+START_ITER = 1 # starting iteration 
 OUTPUT_PATH = '/content/drive/MyDrive/output_wgan/' # output path where result (.e.g drawing images, cost, chart) will be stored
 # MODE = 'wgan-gp'
 DIM = 64 # Model dimensionality
