@@ -44,7 +44,7 @@ NUM_CLASSES = 6
 if len(DATA_DIR) == 0:
     raise Exception('Please specify path to data directory in gan_64x64.py!')
 
-RESTORE_MODE = False  # if True, it will load saved model from OUT_PATH and continue to train
+RESTORE_MODE = True  # if True, it will load saved model from OUT_PATH and continue to train
 START_ITER = 0 # starting iteration 
 OUTPUT_PATH = '/content/drive/MyDrive/output_wgan/' # output path where result (.e.g drawing images, cost, chart) will be stored
 # MODE = 'wgan-gp'
@@ -60,6 +60,8 @@ ACGAN_SCALE = 1. # How to scale the critic's ACGAN loss relative to WGAN loss
 ACGAN_SCALE_G = 1. # How to scale generator's ACGAN loss relative to WGAN loss
 import lmdb
 
+import logging
+
 class LMDBDataset(Dataset):
     def __init__(self, lmdb_path, transform=None):
         self.env = lmdb.open(lmdb_path, readonly=True, lock=False, readahead=False, meminit=False)
@@ -71,24 +73,39 @@ class LMDBDataset(Dataset):
         ])
         with self.env.begin(write=False) as txn:
             self.length = txn.stat()['entries']
+        
+        self.logger = logging.getLogger(__name__)
+        logging.basicConfig(level=logging.INFO)
 
     def __getitem__(self, index):
-        with self.env.begin(write=False) as txn:
-            cursor = txn.cursor()
-            if cursor.first():
-                for _ in range(index):
-                    if not cursor.next():
-                        raise IndexError("Index out of range")
-                key, value = cursor.item()
-                img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                img = Image.fromarray(img)
-                if self.transform:
-                    img = self.transform(img)
-                label = int(key[:2])  # キーの最初の2桁をラベルとして使用
-                return img, label
-            else:
-                raise IndexError("Empty database")
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                with self.env.begin(write=False) as txn:
+                    cursor = txn.cursor()
+                    if cursor.first():
+                        for _ in range(index):
+                            if not cursor.next():
+                                raise IndexError("Index out of range")
+                        key, value = cursor.item()
+                        img = cv2.imdecode(np.frombuffer(value, dtype=np.uint8), cv2.IMREAD_COLOR)
+                        if img is None:
+                            raise ValueError(f"Failed to decode image at index {index}")
+                        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                        img = Image.fromarray(img)
+                        if self.transform:
+                            img = self.transform(img)
+                        label = int(key[:2])  # キーの最初の2桁をラベルとして使用
+                        return img, label
+                    else:
+                        raise IndexError("Empty database")
+            except (cv2.error, ValueError, IndexError) as e:
+                self.logger.warning(f"Error processing image at index {index}, attempt {attempt + 1}: {str(e)}")
+                if attempt == max_retries - 1:
+                    self.logger.error(f"Failed to process image after {max_retries} attempts. Skipping.")
+                    # ダミーデータを返す
+                    return torch.zeros((3, 64, 64)), -1  # -1 はエラーを示すダミーラベル
+                index = (index + 1) % self.length  # 次の画像を試す
 
     def __len__(self):
         return self.length
