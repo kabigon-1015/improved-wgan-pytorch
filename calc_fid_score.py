@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 from torch.utils.data import SubsetRandomSampler
 
 # congan_train.pyからLMDBDatasetをインポート
-from congan_train import LMDBDataset, gen_rand_noise_with_label
+from congan_train import LMDBDataset
 
 NUM_CLASSES = 6
 BATCH_SIZE = 64
@@ -131,10 +131,11 @@ def get_generated_images_and_labels(generator, num_images):
     with torch.no_grad():
         for _ in tqdm(range(0, num_images, BATCH_SIZE), desc="Generating images"):
             current_batch_size = min(BATCH_SIZE, num_images - total_generated)
-            noise = gen_rand_noise_with_label(np.random.randint(0, NUM_CLASSES, current_batch_size))
+            fake_labels = np.random.randint(0, NUM_CLASSES, current_batch_size)
+            noise = gen_rand_noise_with_label(fake_labels)
             fake_images = generator(noise)
             images.append(fake_images.cpu())
-            labels.extend(noise[:, :NUM_CLASSES].argmax(dim=1).cpu().numpy())
+            labels.extend(fake_labels)
             total_generated += current_batch_size
             if total_generated >= num_images:
                 break
@@ -154,6 +155,27 @@ def extract_features_and_labels(model, dataloader, num_images):
             features.append(feat.cpu().numpy())
             labels.extend(batch_labels.numpy())
     return np.concatenate(features)[:num_images], np.array(labels)[:num_images]
+
+def gen_rand_noise_with_label(label=None):
+    if label is None:
+        label = np.random.randint(0, NUM_CLASSES, BATCH_SIZE)
+    else:
+        # ラベルが与えられた場合、そのサイズを使用
+        batch_size = len(label)
+    
+    # 実際のバッチサイズを使用
+    actual_batch_size = len(label)
+    
+    #attach label into noise
+    noise = np.random.normal(0, 1, (actual_batch_size, 128))
+    prefix = np.zeros((actual_batch_size, NUM_CLASSES))
+    prefix[np.arange(actual_batch_size), label] = 1
+    noise[np.arange(actual_batch_size), :NUM_CLASSES] = prefix[np.arange(actual_batch_size)]
+
+    noise = torch.from_numpy(noise).float()
+    noise = noise.to('cuda')
+
+    return noise
 
 # メイン処理
 def main():
