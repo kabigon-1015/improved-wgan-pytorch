@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 from torch.utils.data import SubsetRandomSampler
 
 # congan_train.pyからLMDBDatasetをインポート
-from congan_train import LMDBDataset
+from congan_train import LMDBDataset, gen_rand_noise_with_label
 
 NUM_CLASSES = 6
 BATCH_SIZE = 64
@@ -127,13 +127,17 @@ def get_generated_images_and_labels(generator, num_images):
     generator.eval()
     images = []
     labels = []
+    total_generated = 0
     with torch.no_grad():
         for _ in tqdm(range(0, num_images, BATCH_SIZE), desc="Generating images"):
-            noise = torch.randn(BATCH_SIZE, 128).to('cuda')
-            fake_labels = torch.randint(0, NUM_CLASSES, (BATCH_SIZE,)).to('cuda')
-            fake_images = generator(noise, fake_labels)
+            current_batch_size = min(BATCH_SIZE, num_images - total_generated)
+            noise = gen_rand_noise_with_label(np.random.randint(0, NUM_CLASSES, current_batch_size))
+            fake_images = generator(noise)
             images.append(fake_images.cpu())
-            labels.extend(fake_labels.cpu().numpy())
+            labels.extend(noise[:, :NUM_CLASSES].argmax(dim=1).cpu().numpy())
+            total_generated += current_batch_size
+            if total_generated >= num_images:
+                break
     return torch.cat(images)[:num_images], np.array(labels)[:num_images]
 
 # 特徴量とラベルを同時に抽出する関数
