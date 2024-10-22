@@ -215,7 +215,7 @@ def main():
     real_dataset = LMDBDataset(real_data_path, transform=transform)
 
     # クラスラベルが0のインデックスを取得
-    class_0_indices = get_filtered_indices(real_dataset, target_class=[1,2])
+    class_0_indices = get_filtered_indices(real_dataset, target_classes=[1,2])
 
     # num_imagesを超えないように、必要な数のインデックスをランダムに選択
     if len(class_0_indices) > num_images:
