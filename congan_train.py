@@ -364,6 +364,7 @@ def train():
             torch.save(aD, OUTPUT_PATH + "discriminator.pt")
         lib.plot.tick()
 
-train()
+if __name__ == "__main__":
+    train()
 
 

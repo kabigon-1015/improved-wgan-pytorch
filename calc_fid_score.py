@@ -187,4 +187,5 @@ def main():
     # 多峰性FIDの可視化
     visualize_multimodal_fid(real_features, generated_features, real_labels, generated_labels)
 
-main()
+if __name__ == "__main__":
+    main()
