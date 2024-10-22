@@ -7,7 +7,7 @@ from PIL import Image
 import os
 from tqdm import tqdm
 from sklearn.cluster import KMeans
-from torch.utils.data import SubsetRandomSampler
+from torch.utils.data import SubsetRandomSampler, Subset
 import torch.nn.functional as F
 
 # congan_train.pyからLMDBDatasetをインポート
@@ -133,7 +133,7 @@ def get_generated_images_and_labels(generator, num_images):
     with torch.no_grad():
         for _ in tqdm(range(0, num_images, BATCH_SIZE), desc="Generating images"):
             current_batch_size = min(BATCH_SIZE, num_images - total_generated)
-            fake_labels = np.random.randint(0, NUM_CLASSES, current_batch_size)
+            fake_labels = np.random.choice([1, 2], size=current_batch_size)
             noise = gen_rand_noise_with_label(fake_labels)
             fake_images = generator(noise)
             images.append(fake_images.cpu())
@@ -188,6 +188,14 @@ def gen_rand_noise_with_label(label=None):
 
     return noise
 
+def get_filtered_indices(dataset, target_classes):
+    indices = []
+    for i in range(len(dataset)):
+        _, label = dataset[i]
+        if label in target_classes:
+            indices.append(i)
+    return indices
+
 # メイン処理
 def main():
     # データセットとモデルのパスを設定
@@ -204,11 +212,22 @@ def main():
     ])
     num_images = 100000  # FID計算に使用する画像の数
 
-    # 実際のデータセットの準備
     real_dataset = LMDBDataset(real_data_path, transform=transform)
-    indices = torch.randperm(len(real_dataset))[:num_images]
-    sampler = SubsetRandomSampler(indices)
-    real_dataloader = DataLoader(real_dataset, batch_size=BATCH_SIZE, sampler=sampler, num_workers=4)
+
+    # クラスラベルが0のインデックスを取得
+    class_0_indices = get_filtered_indices(real_dataset, target_class=[1,2])
+
+    # num_imagesを超えないように、必要な数のインデックスをランダムに選択
+    if len(class_0_indices) > num_images:
+        selected_indices = np.random.choice(class_0_indices, num_images, replace=False)
+    else:
+        selected_indices = class_0_indices
+
+    # 選択されたインデックスでSubsetを作成
+    subset = Subset(real_dataset, selected_indices)
+
+    # DataLoaderの作成
+    real_dataloader = DataLoader(subset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
     # 生成器の準備
     generator = torch.load(model_path)
