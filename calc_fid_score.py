@@ -165,6 +165,7 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
+    num_images = 10000  # FID計算に使用する画像の数
 
     # 実際のデータセットの準備
     real_dataset = LMDBDataset(real_data_path, transform=transform)
@@ -176,7 +177,6 @@ def main():
     generator = torch.load(model_path)
 
     # 実際の画像と生成画像の特徴抽出
-    num_images = 10000  # FID計算に使用する画像の数
     real_features, real_labels = extract_features_and_labels(inception_model, real_dataloader, num_images)
     generated_images, generated_labels = get_generated_images_and_labels(generator, num_images)
     generated_features = extract_features(inception_model, DataLoader(generated_images, batch_size=BATCH_SIZE))
