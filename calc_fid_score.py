@@ -7,6 +7,7 @@ from PIL import Image
 import os
 from tqdm import tqdm
 from sklearn.cluster import KMeans
+from torch.utils.data import SubsetRandomSampler
 
 # congan_train.pyからLMDBDatasetをインポート
 from congan_train import LMDBDataset
@@ -167,7 +168,9 @@ def main():
 
     # 実際のデータセットの準備
     real_dataset = LMDBDataset(real_data_path, transform=transform)
-    real_dataloader = DataLoader(real_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+    indices = torch.randperm(len(real_dataset))[:num_images]
+    sampler = SubsetRandomSampler(indices)
+    real_dataloader = DataLoader(real_dataset, batch_size=BATCH_SIZE, sampler=sampler, num_workers=4)
 
     # 生成器の準備
     generator = torch.load(model_path)
