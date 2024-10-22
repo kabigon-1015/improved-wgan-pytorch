@@ -210,7 +210,7 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
-    num_images = 100000  # FID計算に使用する画像の数
+    num_images = 50000  # FID計算に使用する画像の数
 
     real_dataset = LMDBDataset(real_data_path, transform=transform)
 
