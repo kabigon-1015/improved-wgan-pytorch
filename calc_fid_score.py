@@ -9,7 +9,6 @@ from tqdm import tqdm
 from sklearn.cluster import KMeans
 from torch.utils.data import SubsetRandomSampler, Subset
 import torch.nn.functional as F
-import lmdb
 
 # congan_train.pyからLMDBDatasetをインポート
 from congan_train import LMDBDataset
@@ -189,16 +188,14 @@ def gen_rand_noise_with_label(label=None):
 
     return noise
 
-def get_filtered_indices_lmdb(lmdb_path, target_classes):
+def get_filtered_indices(dataset, target_classes):
     indices = []
-    env = lmdb.open(lmdb_path, readonly=True, lock=False, readahead=False, meminit=False)
-    with env.begin(write=False) as txn:
-        cursor = txn.cursor()
-        for key, _ in tqdm(cursor, desc="Filtering indices", unit="image"):
-            label = int(key[:2])  # キーの最初の2桁をラベルとして使用
-            if label in target_classes:
-                indices.append(int(key))
-    env.close()
+    for i in tqdm(range(len(dataset)), desc="Filtering indices", unit="image"):
+        _, label = dataset[i]
+        if label in target_classes:
+            indices.append(i)
+        if len(indices) > 50000:
+            break
     return indices
 
 # メイン処理
@@ -222,7 +219,7 @@ def main():
     print("completed data load")
 
     # クラスラベルが0のインデックスを取得
-    class_0_indices = get_filtered_indices_lmdb(real_dataset, target_classes=[1,2])
+    class_0_indices = get_filtered_indices(real_dataset, target_classes=[1,2])
     print("completed filter")
 
     # num_imagesを超えないように、必要な数のインデックスをランダムに選択
