@@ -216,6 +216,7 @@ def main():
 
     # クラスラベルが0のインデックスを取得
     class_0_indices = get_filtered_indices(real_dataset, target_classes=[1,2])
+    print("completed filter")
 
     # num_imagesを超えないように、必要な数のインデックスをランダムに選択
     if len(class_0_indices) > num_images:
@@ -225,6 +226,7 @@ def main():
 
     # 選択されたインデックスでSubsetを作成
     subset = Subset(real_dataset, selected_indices)
+    print("completed create subset")
 
     # DataLoaderの作成
     real_dataloader = DataLoader(subset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
