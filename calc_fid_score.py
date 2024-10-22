@@ -159,8 +159,14 @@ def main():
     # Inception V3 モデルの準備
     inception_model = get_inception_model()
 
+    transform = transforms.Compose([
+        transforms.Resize((299, 299)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    ])
+
     # 実際のデータセットの準備
-    real_dataset = LMDBDataset(real_data_path)
+    real_dataset = LMDBDataset(real_data_path, transform=transform)
     real_dataloader = DataLoader(real_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
     # 生成器の準備
