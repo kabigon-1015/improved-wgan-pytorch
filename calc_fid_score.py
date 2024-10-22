@@ -190,7 +190,7 @@ def gen_rand_noise_with_label(label=None):
 
 def get_filtered_indices(dataset, target_classes):
     indices = []
-    for i in range(len(dataset)):
+    for i in tqdm(range(len(dataset)), desc="Filtering indices", unit="image"):
         _, label = dataset[i]
         if label in target_classes:
             indices.append(i)
