@@ -9,8 +9,11 @@ from tqdm import tqdm
 from sklearn.cluster import KMeans
 
 # congan_train.pyからLMDBDatasetをインポート
-from congan_train import LMDBDataset, GoodGenerator, NUM_CLASSES, BATCH_SIZE, DIM
+from congan_train import LMDBDataset
 
+NUM_CLASSES = 6
+BATCH_SIZE = 64
+DIM = 64
 # Inception V3 モデルの準備
 def get_inception_model():
     model = models.inception_v3(pretrained=True)
@@ -161,8 +164,7 @@ def main():
     real_dataloader = DataLoader(real_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
     # 生成器の準備
-    generator = GoodGenerator(DIM, DIM*DIM*3).to('cuda')
-    generator.load_state_dict(torch.load(model_path))
+    generator = torch.load(model_path)
 
     # 実際の画像と生成画像の特徴抽出
     num_images = 10000  # FID計算に使用する画像の数
