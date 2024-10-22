@@ -139,7 +139,16 @@ def get_generated_images_and_labels(generator, num_images):
             total_generated += current_batch_size
             if total_generated >= num_images:
                 break
-    return torch.cat(images)[:num_images], np.array(labels)[:num_images]
+    images = torch.cat(images)[:num_images]
+    labels = np.array(labels)[:num_images]
+    
+    # 画像の形状を確認し、必要に応じて調整
+    if images.dim() == 2:
+        images = images.view(-1, 3, 64, 64)  # 仮定: 64x64の画像
+    elif images.dim() == 3:
+        images = images.unsqueeze(1)  # チャンネル次元を追加
+    
+    return images, labels
 
 # 特徴量とラベルを同時に抽出する関数
 def extract_features_and_labels(model, dataloader, num_images):
