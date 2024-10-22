@@ -194,7 +194,7 @@ def get_filtered_indices(dataset, target_classes):
         _, label = dataset[i]
         if label in target_classes:
             indices.append(i)
-        if len(indices) > 50000:
+        if len(indices) > 20000:
             break
     return indices
 
@@ -213,7 +213,7 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
-    num_images = 50000  # FID計算に使用する画像の数
+    num_images = 20000  # FID計算に使用する画像の数
 
     real_dataset = LMDBDataset(real_data_path, transform=transform)
     print("completed data load")
