@@ -133,7 +133,7 @@ def get_generated_images_and_labels(generator, num_images):
     with torch.no_grad():
         for _ in tqdm(range(0, num_images, BATCH_SIZE), desc="Generating images"):
             current_batch_size = min(BATCH_SIZE, num_images - total_generated)
-            fake_labels = np.random.choice([1, 2], size=current_batch_size)
+            fake_labels = np.random.choice([0,1], size=current_batch_size)
             noise = gen_rand_noise_with_label(fake_labels)
             fake_images = generator(noise)
             images.append(fake_images.cpu())
@@ -219,7 +219,7 @@ def main():
     print("completed data load")
 
     # クラスラベルが0のインデックスを取得
-    class_0_indices = get_filtered_indices(real_dataset, target_classes=[1,2])
+    class_0_indices = get_filtered_indices(real_dataset, target_classes=[0,1])
     print("completed filter")
 
     # num_imagesを超えないように、必要な数のインデックスをランダムに選択
