@@ -204,6 +204,7 @@ def main():
 
     # Inception V3 モデルの準備
     inception_model = get_inception_model()
+    print("completed load inception")
 
     transform = transforms.Compose([
         transforms.Resize((299, 299)),
@@ -213,6 +214,7 @@ def main():
     num_images = 50000  # FID計算に使用する画像の数
 
     real_dataset = LMDBDataset(real_data_path, transform=transform)
+    print("completed data load")
 
     # クラスラベルが0のインデックスを取得
     class_0_indices = get_filtered_indices(real_dataset, target_classes=[1,2])
