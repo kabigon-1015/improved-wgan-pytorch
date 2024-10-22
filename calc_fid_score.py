@@ -8,6 +8,7 @@ import os
 from tqdm import tqdm
 from sklearn.cluster import KMeans
 from torch.utils.data import SubsetRandomSampler
+import torch.nn.functional as F
 
 # congan_train.pyからLMDBDatasetをインポート
 from congan_train import LMDBDataset
@@ -35,6 +36,7 @@ def extract_features(model, dataloader):
     features = []
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Extracting features"):
+            batch = F.interpolate(batch, size=(299, 299), mode='bilinear', align_corners=False)
             batch = batch.to('cuda')
             feat = model(batch)
             features.append(feat.squeeze().cpu().numpy())
@@ -214,6 +216,7 @@ def main():
     # 実際の画像と生成画像の特徴抽出
     real_features, real_labels = extract_features_and_labels(inception_model, real_dataloader, num_images)
     generated_images, generated_labels = get_generated_images_and_labels(generator, num_images)
+    print("Generated images shape:", generated_images.shape)
     generated_features = extract_features(inception_model, DataLoader(generated_images, batch_size=BATCH_SIZE))
 
     # FIDスコアの計算
