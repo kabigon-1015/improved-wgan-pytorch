@@ -271,6 +271,7 @@ def train():
             # gen fake data and load real data
             f_label = np.random.randint(0, NUM_CLASSES, BATCH_SIZE)
             noise = gen_rand_noise_with_label(f_label)
+            print(noise.size())
             with torch.no_grad():
                 noisev = noise  # totally freeze G, training D
             fake_data = aG(noisev).detach()
